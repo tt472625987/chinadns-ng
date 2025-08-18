@@ -6,6 +6,4 @@ services:
     network_mode: host
     privileged: true
     restart: unless-stopped
-    volumes:
-      - ./config:/etc/chinadns-ng
     command: ["-C", "/etc/chinadns-ng/chinadns-ng.conf"]

@@ -3,7 +3,7 @@ FROM alpine:3.18
 # 安装依赖（增加 ca-certificates 以支持 DoT/DoH）
 RUN apk add --no-cache \
     ipset \
-    ca-certificates  # 用于TLS证书验证
+    ca-certificates
 
 # 创建配置目录
 RUN mkdir -p /etc/chinadns-ng
@@ -22,4 +22,4 @@ RUN chmod +x /usr/local/bin/chinadns-ng && \
 ENTRYPOINT ["/usr/local/bin/chinadns-ng", "-C", "/etc/chinadns-ng/chinadns-ng.conf"]
 
 # 声明端口（实际使用建议 --network host）
-EXPOSE 53/tcp 53/udp
+EXPOSE 65353/tcp 65353/udp
