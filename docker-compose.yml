@@ -4,6 +4,17 @@ services:
     image: chinadns-ng:latest
     container_name: chinadns-ng
     network_mode: host
-    privileged: true
+    # 仅在需要 ipset 时提升权限；否则请移除
+    cap_add:
+      - NET_ADMIN
     restart: unless-stopped
-    command: ["-C", "/etc/chinadns-ng/chinadns-ng.conf"]
+    volumes:
+      - /home/chinadns-ng:/etc/chinadns-ng:ro
+    # ENTRYPOINT 已在镜像中定义，无需再次指定
+    # command: ["-C", "/etc/chinadns-ng/chinadns-ng.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "nc -zu 127.0.0.1 65353 || nc -z 127.0.0.1 65353"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

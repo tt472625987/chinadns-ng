@@ -1,0 +1,23 @@
+# VCS
+.git
+.gitignore
+
+# Logs and OS junk
+*.log
+.DS_Store
+
+# Local artifacts
+*.tar
+node_modules
+
+# Exclude local configs that shouldn't go into image by default
+# (we copy explicit files in Dockerfile)
+config/
+!config/chinadns-ng.conf
+!config/chnlist.txt
+!config/gfwlist.txt
+
+# Scripts are not needed in image
+build.sh
+update-lists.sh
+README.md 

@@ -3,7 +3,9 @@ FROM alpine:3.18
 # 安装依赖（增加 ca-certificates 以支持 DoT/DoH）
 RUN apk add --no-cache \
     ipset \
-    ca-certificates
+    ca-certificates \
+    bash \
+    busybox-extras
 
 # 创建配置目录
 RUN mkdir -p /etc/chinadns-ng
@@ -14,7 +16,7 @@ COPY config/chinadns-ng.conf /etc/chinadns-ng/
 COPY config/chnlist.txt /etc/chinadns-ng/
 COPY config/gfwlist.txt /etc/chinadns-ng/
 
-# 设置权限和入口点
+# 设置权限（保持 root 以便可选 ipset 权限）
 RUN chmod +x /usr/local/bin/chinadns-ng && \
     chmod 644 /etc/chinadns-ng/*
 
