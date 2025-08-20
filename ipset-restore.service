@@ -1,0 +1,13 @@
+[Unit]
+Description=Restore chinadns-ng ipset collections
+After=network.target
+Before=firewall.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/chinadns-ng/ipset/ipset-persist.sh restore
+RemainAfterExit=yes
+User=root
+
+[Install]
+WantedBy=multi-user.target 

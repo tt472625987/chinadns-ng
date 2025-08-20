@@ -1,23 +1,28 @@
-# VCS
-.git
+# Git 相关
+.git/
 .gitignore
 
-# Logs and OS junk
-*.log
-.DS_Store
-
-# Local artifacts
-*.tar
-node_modules
-
-# Exclude local configs that shouldn't go into image by default
-# (we copy explicit files in Dockerfile)
-config/
-!config/chinadns-ng.conf
-!config/chnlist.txt
-!config/gfwlist.txt
-
-# Scripts are not needed in image
+# 宿主机脚本和工具
+ipset-persist.sh
+install-ipset.sh
+ipset-restore.service
+ipset-restore.init
 build.sh
 update-lists.sh
-README.md 
+
+# 文档
+README.md
+
+# 构建相关
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# 临时文件
+*.tmp
+*.log
+*.bak
+
+# 系统文件
+.DS_Store
+Thumbs.db 

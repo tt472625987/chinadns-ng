@@ -4,14 +4,9 @@ services:
     image: chinadns-ng:latest
     container_name: chinadns-ng
     network_mode: host
-    # 仅在需要 ipset 时提升权限；否则请移除
-    cap_add:
-      - NET_ADMIN
     restart: unless-stopped
     volumes:
       - /home/chinadns-ng:/etc/chinadns-ng:ro
-    # ENTRYPOINT 已在镜像中定义，无需再次指定
-    # command: ["-C", "/etc/chinadns-ng/chinadns-ng.conf"]
     healthcheck:
       test:
         [

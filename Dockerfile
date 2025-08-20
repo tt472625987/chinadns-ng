@@ -10,7 +10,7 @@ RUN apk add --no-cache \
 # 创建配置目录
 RUN mkdir -p /etc/chinadns-ng
 
-# 复制可执行文件和默认配置
+# 复制可执行文件和配置文件
 COPY chinadns-ng /usr/local/bin/
 COPY config/chinadns-ng.conf /etc/chinadns-ng/
 COPY config/chnlist.txt /etc/chinadns-ng/

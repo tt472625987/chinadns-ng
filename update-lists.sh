@@ -8,6 +8,10 @@ mkdir -p "${LIST_DIR}"
 
 RAW_BASE="https://raw.githubusercontent.com/zfl9/chinadns-ng/master/res"
 
+# 是否重启容器：默认是（1），可通过环境变量 SKIP_RESTART=1 关闭
+SKIP_RESTART="${SKIP_RESTART:-0}"
+SERVICE_NAME="chinadns-ng"
+
 fetch() {
   local url="$1" out="$2"
   if command -v curl >/dev/null 2>&1; then
@@ -25,4 +29,17 @@ fetch "${RAW_BASE}/gfwlist.txt" "${LIST_DIR}/gfwlist.txt"
 
 echo "已更新:"
 echo "  ${LIST_DIR}/chnlist.txt"
-echo "  ${LIST_DIR}/gfwlist.txt" 
+echo "  ${LIST_DIR}/gfwlist.txt"
+
+if [ "$SKIP_RESTART" != "1" ]; then
+  echo "重启 Docker 服务: ${SERVICE_NAME}"
+  if command -v docker-compose >/dev/null 2>&1; then
+    (cd "$(dirname "$0")" && docker-compose restart "${SERVICE_NAME}") || true
+  elif docker compose version >/dev/null 2>&1; then
+    (cd "$(dirname "$0")" && docker compose restart "${SERVICE_NAME}") || true
+  else
+    echo "未检测到 docker compose，跳过重启。"
+  fi
+else
+  echo "已跳过重启（SKIP_RESTART=${SKIP_RESTART})"
+fi 

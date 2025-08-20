@@ -1,0 +1,23 @@
+#!/bin/sh /etc/rc.common
+
+START=19
+STOP=89
+
+start() {
+    echo "Restoring chinadns-ng ipset collections..."
+    if [ -f /etc/chinadns-ng/ipset/ipset-persist.sh ]; then
+        chmod +x /etc/chinadns-ng/ipset/ipset-persist.sh
+        /etc/chinadns-ng/ipset/ipset-persist.sh restore
+    else
+        echo "ipset-persist.sh not found, skipping..."
+    fi
+}
+
+stop() {
+    echo "Stopping chinadns-ng ipset restore service..."
+}
+
+reload() {
+    stop
+    start
+} 
