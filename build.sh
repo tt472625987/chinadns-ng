@@ -74,8 +74,8 @@ else
   RSYNC_CFG_FAIL=1
 fi
 if [[ "${RSYNC_CFG_FAIL}" -ne 0 ]]; then
-  echo "同步本地 config/ 到远端 ${REMOTE_CONFIG_DIR}/ (scp)"
-  scp -O -o StrictHostKeyChecking=no -r config/. "${TARGET_SERVER}:${REMOTE_CONFIG_DIR}/"
+  echo "同步本地 config/ 到远端 ${REMOTE_CONFIG_DIR}/ (tar over ssh)"
+  tar -C config -cf - . | ssh -o StrictHostKeyChecking=no "${TARGET_SERVER}" "tar -C '${REMOTE_CONFIG_DIR}' -xf -"
 fi
 
 # 4. 在目标服务器部署（新增清理旧容器和镜像）
