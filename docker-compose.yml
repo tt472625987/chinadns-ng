@@ -6,7 +6,7 @@ services:
     network_mode: host
     restart: unless-stopped
     volumes:
-      - /home/chinadns-ng:/etc/chinadns-ng:ro
+      - /home/chinadns-ng/config:/etc/chinadns-ng:ro
     healthcheck:
       test:
         [

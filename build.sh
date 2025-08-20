@@ -70,7 +70,7 @@ IMAGE_NAME="${IMAGE_NAME:-chinadns-ng}"
 TAG="${TAG:-latest}"
 DEPLOY_DIR="${DEPLOY_DIR:?DEPLOY_DIR is required}"
 TAR_FILE="${IMAGE_NAME}-${TAG}.tar"
-CONFIG_DIR="/home/chinadns-ng"
+CONFIG_DIR="/home/chinadns-ng/config"
 
 mkdir -p "${CONFIG_DIR}"
 cd "${DEPLOY_DIR}"
