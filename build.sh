@@ -62,10 +62,18 @@ if [[ "${RSYNC_FAIL:-0}" -ne 0 ]]; then
 fi
 
 # 3.1 同步本地 config/ 到远端挂载目录（确保配置变更立即生效）
+RSYNC_CFG_FAIL=0
 if command -v rsync >/dev/null 2>&1; then
-  echo "同步本地 config/ 到远端 ${REMOTE_CONFIG_DIR}/ (rsync)"
-  rsync -avz -e "ssh -o StrictHostKeyChecking=no" config/ "${TARGET_SERVER}:${REMOTE_CONFIG_DIR}/"
+  if ssh -o StrictHostKeyChecking=no "${TARGET_SERVER}" "command -v rsync >/dev/null 2>&1"; then
+    echo "同步本地 config/ 到远端 ${REMOTE_CONFIG_DIR}/ (rsync)"
+    rsync -avz -e "ssh -o StrictHostKeyChecking=no" config/ "${TARGET_SERVER}:${REMOTE_CONFIG_DIR}/" || RSYNC_CFG_FAIL=1
+  else
+    RSYNC_CFG_FAIL=1
+  fi
 else
+  RSYNC_CFG_FAIL=1
+fi
+if [[ "${RSYNC_CFG_FAIL}" -ne 0 ]]; then
   echo "同步本地 config/ 到远端 ${REMOTE_CONFIG_DIR}/ (scp)"
   scp -O -o StrictHostKeyChecking=no -r config/. "${TARGET_SERVER}:${REMOTE_CONFIG_DIR}/"
 fi
