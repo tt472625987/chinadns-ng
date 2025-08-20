@@ -5,7 +5,8 @@ RUN apk add --no-cache \
     ipset \
     ca-certificates \
     bash \
-    busybox-extras
+    busybox-extras \
+    bind-tools
 
 # 创建配置目录
 RUN mkdir -p /etc/chinadns-ng
