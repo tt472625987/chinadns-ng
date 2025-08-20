@@ -13,8 +13,18 @@ services:
     # ENTRYPOINT 已在镜像中定义，无需再次指定
     # command: ["-C", "/etc/chinadns-ng/chinadns-ng.conf"]
     healthcheck:
-      test: ["CMD-SHELL", "nc -zu 127.0.0.1 65353 || nc -z 127.0.0.1 65353"]
+      test:
+        [
+          "CMD",
+          "dig",
+          "@127.0.0.1",
+          "-p",
+          "65353",
+          "baidu.com",
+          "+timeout=3",
+          "+retries=1",
+        ]
       interval: 30s
-      timeout: 3s
+      timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 10s
