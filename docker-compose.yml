@@ -1,10 +1,11 @@
-version: "3"
 services:
   chinadns-ng:
     image: chinadns-ng:latest
     container_name: chinadns-ng
     network_mode: host
     restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
     volumes:
       - /home/chinadns-ng/config:/etc/chinadns-ng:ro
     healthcheck:
