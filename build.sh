@@ -20,7 +20,46 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-# 1. 构建Docker镜像
+# [新增] 统一从上游获取最新列表并与本地增量合并
+GITHUB_BASE="https://github.com/zfl9/chinadns-ng/raw/master/res"
+LOCAL_CFG_DIR="$(cd "$(dirname "$0")" && pwd)/config"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TMP_DIR}"' EXIT
+
+fetch() {
+  local url="$1" out="$2"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$out"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$out" "$url"
+  else
+    echo "需要 curl 或 wget 以下载规则列表" >&2
+    exit 1
+  fi
+}
+
+merge_unique() {
+  # 用法: merge_unique 上游文件 本地文件 [本地附加文件]
+  local upstream="$1" localfile="$2" localextra="${3:-}"
+  local backup="${localfile}.bak.$(date +%s)"
+  # 备份本地文件（若存在）
+  [[ -f "$localfile" ]] && cp -f "$localfile" "$backup" || true
+  # 合并：保留顺序意义不强的列表，用 sort -u 去重
+  if [[ -n "$localextra" && -f "$localextra" ]]; then
+    cat "$upstream" "$localfile" "$localextra" | sed '/^\s*$/d' | sed 's/\r$//' | sort -u > "${localfile}.merged"
+  else
+    cat "$upstream" "$localfile" | sed '/^\s*$/d' | sed 's/\r$//' | sort -u > "${localfile}.merged"
+  fi
+  mv -f "${localfile}.merged" "$localfile"
+}
+
+echo "[0/5] 更新并合并列表（增量）"
+fetch "${GITHUB_BASE}/chnlist.txt" "${TMP_DIR}/chnlist.txt"
+fetch "${GITHUB_BASE}/gfwlist.txt" "${TMP_DIR}/gfwlist.txt"
+# 支持本地附加文件（可选）：config/chnlist.local, config/gfwlist.local
+merge_unique "${TMP_DIR}/chnlist.txt" "${LOCAL_CFG_DIR}/chnlist.txt" "${LOCAL_CFG_DIR}/chnlist.local"
+merge_unique "${TMP_DIR}/gfwlist.txt" "${LOCAL_CFG_DIR}/gfwlist.txt" "${LOCAL_CFG_DIR}/gfwlist.local"
+
 echo "[1/5] 构建Docker镜像 ${IMAGE_NAME}:${TAG}"
 docker build -t "${IMAGE_NAME}:${TAG}" . || {
   echo "镜像构建失败!"
