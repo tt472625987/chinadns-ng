@@ -4769,7 +4769,6 @@ static.shemalez.com
 statueofdemocracy.org
 stboy.net
 stc.com.sa
-steamcommunity.com
 steel-storm.com
 steemit.com
 steganos.com
@@ -4784,7 +4783,6 @@ sto.cc
 stoporganharvesting.org
 stoptibetcrisis.net
 storagenewsletter.com
-store.steampowered.com
 stories.google
 storify.com
 stormmediagroup.com
