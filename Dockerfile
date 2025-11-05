@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM alpine:latest
 
 # 安装依赖（增加 ca-certificates 以支持 DoT/DoH）
 RUN apk add --no-cache \
