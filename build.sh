@@ -60,7 +60,17 @@ fetch() {
 # merge_unique "${TMP_DIR}/chnlist.txt" "${LOCAL_CFG_DIR}/chnlist.txt" "${LOCAL_CFG_DIR}/chnlist.local"
 # merge_unique "${TMP_DIR}/gfwlist.txt" "${LOCAL_CFG_DIR}/gfwlist.txt" "${LOCAL_CFG_DIR}/gfwlist.local"
 
-echo "[1/5] 构建Docker镜像 ${IMAGE_NAME}:${TAG}"
+echo "[0/6] 验证本地配置"
+if ! grep -q "223.5.5.5" "${LOCAL_CFG_DIR}/chinadns-ng.conf"; then
+  echo "警告: 配置文件可能未更新" >&2
+fi
+if grep -q "119.29.29.29" "${LOCAL_CFG_DIR}/chinadns-ng.conf"; then
+  echo "错误: 配置中仍包含不稳定的DNS 119.29.29.29" >&2
+  exit 1
+fi
+echo "✓ 配置验证通过"
+
+echo "[1/6] 构建Docker镜像 ${IMAGE_NAME}:${TAG}"
 docker build -t "${IMAGE_NAME}:${TAG}" . || {
   echo "镜像构建失败!"
   exit 1
@@ -69,14 +79,14 @@ docker build -t "${IMAGE_NAME}:${TAG}" . || {
 # 2. 保存为tar文件
 TAR_FILE="${IMAGE_NAME}-${TAG}.tar"
 trap 'rm -f "${TAR_FILE}"' EXIT
-echo "[2/5] 导出镜像为 ${TAR_FILE}"
+echo "[2/6] 导出镜像为 ${TAR_FILE}"
 docker save -o "${TAR_FILE}" "${IMAGE_NAME}:${TAG}" || {
   echo "镜像导出失败!"
   exit 1
 }
 
 # 3. 上传文件到目标服务器的子目录
-echo "[3/5] 上传文件到 ${TARGET_SERVER}:${DEPLOY_DIR} 并同步配置到 ${REMOTE_CONFIG_DIR}"
+echo "[3/6] 上传文件到 ${TARGET_SERVER}:${DEPLOY_DIR} 并同步配置到 ${REMOTE_CONFIG_DIR}"
 ssh -o StrictHostKeyChecking=no "${TARGET_SERVER}" "mkdir -p '${DEPLOY_DIR}' '${REMOTE_CONFIG_DIR}'"
 # 优先 rsync，其次 scp(legacy -O)，最后回退到 ssh 流式传输
 if command -v rsync >/dev/null 2>&1; then
@@ -118,7 +128,7 @@ if [[ "${RSYNC_CFG_FAIL}" -ne 0 ]]; then
 fi
 
 # 4. 在目标服务器部署（新增清理旧容器和镜像）
-echo "[4/5] 在目标服务器启动服务"
+echo "[4/6] 在目标服务器启动服务"
 ssh -o StrictHostKeyChecking=no "${TARGET_SERVER}" "IMAGE_NAME='${IMAGE_NAME}' TAG='${TAG}' DEPLOY_DIR='${DEPLOY_DIR}' REMOTE_CONFIG_DIR='${REMOTE_CONFIG_DIR}' sh -s" <<'EOF'
 set -eu
 (set -o pipefail) 2>/dev/null || true
@@ -161,6 +171,41 @@ EOF
 # 5. 清理临时文件
 rm -f "${TAR_FILE}"
 
-echo "部署成功完成！"
-echo "服务已启动，可通过以下命令检查状态："
-echo "ssh ${TARGET_SERVER} \"docker ps -a | grep chinadns-ng\""
+echo "[5/6] 等待服务启动..."
+sleep 5
+
+echo "[6/6] 验证部署"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+ssh -o StrictHostKeyChecking=no "${TARGET_SERVER}" 'bash -s' <<'VERIFY'
+set -e
+
+# 检查容器状态
+echo "📦 容器状态:"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(NAMES|chinadns)"
+
+# 检查端口监听
+echo ""
+echo "🔌 端口监听:"
+netstat -tulnp 2>/dev/null | grep 65353 || echo "未检测到65353端口监听"
+
+# 检查DNS配置
+echo ""
+echo "⚙️  DNS配置:"
+docker exec chinadns-ng cat /etc/chinadns-ng/chinadns-ng.conf | grep -E "(china-dns|trust-dns|timeout-sec)" | head -4
+
+# 测试DNS解析
+echo ""
+echo "🧪 DNS解析测试:"
+echo -n "  国内域名(baidu.com): "
+nslookup baidu.com 127.0.0.1 2>&1 | grep -A1 "answer:" | tail -1 | awk '{print $2}' || echo "失败"
+echo -n "  国外域名(google.com): "
+nslookup google.com 127.0.0.1 2>&1 | grep -A1 "answer:" | tail -1 | awk '{print $2}' || echo "失败"
+VERIFY
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ 部署成功完成！"
+echo ""
+echo "常用命令:"
+echo "  查看日志: ssh ${TARGET_SERVER} \"docker logs -f chinadns-ng\""
+echo "  查看状态: ssh ${TARGET_SERVER} \"docker ps | grep chinadns\""
+echo "  进入容器: ssh ${TARGET_SERVER} \"docker exec -it chinadns-ng sh\""
