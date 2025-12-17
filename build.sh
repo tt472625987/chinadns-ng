@@ -4,7 +4,7 @@ set -euo pipefail
 
 IMAGE_NAME="chinadns-ng"
 TAG="latest"
-TARGET_SERVER="${TARGET_SERVER:-root@192.168.31.2}"
+TARGET_SERVER="${TARGET_SERVER:-isos}"
 TARGET_PATH="${TARGET_PATH:-/overlay/upper/opt/docker/tmp}" # 基础目录
 DEPLOY_DIR="${TARGET_PATH}/${IMAGE_NAME}"   # 实际部署目录
 REMOTE_CONFIG_DIR="/home/chinadns-ng/config" # 宿主机挂载目录
@@ -70,15 +70,16 @@ if grep -q "119.29.29.29" "${LOCAL_CFG_DIR}/chinadns-ng.conf"; then
 fi
 echo "✓ 配置验证通过"
 
-echo "[1/6] 构建Docker镜像 ${IMAGE_NAME}:${TAG}"
-docker build -t "${IMAGE_NAME}:${TAG}" . || {
+echo "[1/6] 构建Docker镜像 ${IMAGE_NAME}:${TAG} (目标平台: linux/amd64)"
+# 使用代理构建（通过旁路由的 HTTP 代理）
+HTTPS_PROXY=http://192.168.31.2:8001 HTTP_PROXY=http://192.168.31.2:8001 \
+  docker build --platform linux/amd64 -t "${IMAGE_NAME}:${TAG}" . || {
   echo "镜像构建失败!"
   exit 1
 }
 
 # 2. 保存为tar文件
 TAR_FILE="${IMAGE_NAME}-${TAG}.tar"
-trap 'rm -f "${TAR_FILE}"' EXIT
 echo "[2/6] 导出镜像为 ${TAR_FILE}"
 docker save -o "${TAR_FILE}" "${IMAGE_NAME}:${TAG}" || {
   echo "镜像导出失败!"
@@ -197,9 +198,9 @@ docker exec chinadns-ng cat /etc/chinadns-ng/chinadns-ng.conf | grep -E "(china-
 echo ""
 echo "🧪 DNS解析测试:"
 echo -n "  国内域名(baidu.com): "
-nslookup baidu.com 127.0.0.1 2>&1 | grep -A1 "answer:" | tail -1 | awk '{print $2}' || echo "失败"
+nslookup baidu.com 127.0.0.1 2>/dev/null | grep -E '^Address.*[0-9]+\.[0-9]+' | grep -v ':53' | head -1 | awk '{print $NF}' || echo "失败"
 echo -n "  国外域名(google.com): "
-nslookup google.com 127.0.0.1 2>&1 | grep -A1 "answer:" | tail -1 | awk '{print $2}' || echo "失败"
+nslookup google.com 127.0.0.1 2>/dev/null | grep -E '^Address.*[0-9]+\.[0-9]+' | grep -v ':53' | head -1 | awk '{print $NF}' || echo "失败"
 VERIFY
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
