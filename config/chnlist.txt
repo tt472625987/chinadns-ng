@@ -72089,3 +72089,15 @@ go.microsoft.com
 www.bing.com
 cn.bing.com
 client.wns.windows.com
+
+# 抖音/字节跳动服务（国内）
+buyin.jinritemai.com
+webcast5-normal-c-lf.amemv.com
+amemv.com
+
+# Apple 服务（国内可直连）
+help.apple.com
+cds.apple.com
+api.apple-cloudkit.com
+apple-cloudkit.com
+courier.push.apple.com
