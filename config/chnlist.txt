@@ -72084,3 +72084,8 @@ osrecovery.apple.com
 configuration.apple.com
 mesu.apple.com
 gdmf.apple.com
+# Microsoft 服务（国内可直连）
+go.microsoft.com
+www.bing.com
+cn.bing.com
+client.wns.windows.com
